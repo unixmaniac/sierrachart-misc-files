@@ -31,6 +31,8 @@ FADEB32="https://download.opensuse.org/repositories/Emulators:/Wine:/Debian/xUbu
 
 SCZIPURL="https://www.sierrachart.com/downloads/ZipFiles/SierraChartVERSION.zip"
 
+LOGFILE="/var/tmp/sc_install.log"
+
 ### functions
 fail_exit() {
 
@@ -75,6 +77,13 @@ ${SUDO_X} -v
 check_status
 
 
+# touch logfile
+echo -n " ${YC}*${NC} Start logging to ${LOGFILE}"
+/usr/bin/touch ${LOGFILE}
+check_status
+
+echo `date` > ${LOGFILE}
+
 # check/install first dependencies
 if [ -x "$WGET_X" ] && [ -x "$CURL_X" ] && [ -x "$GDEBI_X" ] && [ -x "$UNZIP_X" ]; then
 
@@ -83,7 +92,7 @@ if [ -x "$WGET_X" ] && [ -x "$CURL_X" ] && [ -x "$GDEBI_X" ] && [ -x "$UNZIP_X" 
 else
 
 	echo -n " ${YC}*${NC} Installing dependencies..."
-	${SUDO_X} apt install wget curl gdebi unzip -y >/dev/null 2>&1
+	${SUDO_X} apt install wget curl gdebi unzip -y >>${LOGFILE} 2>&1
 
 	check_status
 
@@ -103,14 +112,14 @@ else
 	check_status
 
 	echo -n "\t${YC}-${NC} Installing WINE repo GPG key"
-	{ ${CURL_X} https://dl.winehq.org/wine-builds/winehq.key | ${SUDO_X} ${APTKEY_X} add -; } >/dev/null 2>&1
+	{ ${CURL_X} https://dl.winehq.org/wine-builds/winehq.key | ${SUDO_X} ${APTKEY_X} add -; } >>${LOGFILE} 2>&1
 	check_status
 
 	if [ "$URNAME" = "bionic" ]; then
 
 		echo -n "\t${YC}-${NC} Downloading libfaudio packages"
-		${WGET_X} -q $FADEB32 -O /var/tmp/libfa32.deb 
-		${WGET_X} -q $FADEB64 -O /var/tmp/libfa64.deb
+		${WGET_X} $FADEB32 -O /var/tmp/libfa32.deb >>${LOGFILE} 2>&1
+		${WGET_X} $FADEB64 -O /var/tmp/libfa64.deb >>${LOGFILE} 2>&1
 
 		if [ ! -f "/var/tmp/libfa32.deb" ] || [ ! -f "/var/tmp/libfa32.deb" ]; then
 
@@ -121,10 +130,10 @@ else
 
 			echo "\t${GC}OK${NC}\n"
 			echo -n "\t${YC}-${NC} Installing 32bit libfaudio"
-			${SUDO_X} ${GDEBI_X} -n /var/tmp/libfa32.deb >/dev/null 2>&1
+			${SUDO_X} ${GDEBI_X} -n /var/tmp/libfa32.deb >>${LOGFILE} 2>&1
 			check_status
 			echo -n "\t${YC}-${NC} Installing 64bit libfaudio"
-			${SUDO_X} ${GDEBI_X} -n /var/tmp/libfa64.deb >/dev/null 2>&1
+			${SUDO_X} ${GDEBI_X} -n /var/tmp/libfa64.deb >>${LOGFILE} 2>&1
 			check_status
 
 		fi
@@ -132,7 +141,7 @@ else
 	fi
 
 	echo -n "\t${YC}-${NC} Enabling WINE repository"
-	${SUDO_X} /usr/bin/apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ bionic main' >/dev/null 2>&1
+	${SUDO_X} /usr/bin/apt-add-repository 'deb https://dl.winehq.org/wine-builds/ubuntu/ bionic main' >>${LOGFILE} 2>&1
 	check_status
 
 	echo -n "\n\n\t===================================\n"
@@ -168,21 +177,21 @@ else
 
 		
 		
-	echo "\t${YC}-${NC} Installing WINE (${WINEBRANCH} branch)..."
-	${SUDO_X} ${APT_X} install --install-recommends winehq-${WINEBRANCH} -y >/dev/null 2>&1
+	echo -n "\t${YC}-${NC} Installing WINE (${WINEBRANCH} branch)..."
+	${SUDO_X} ${APT_X} install --install-recommends winehq-${WINEBRANCH} -y >>${LOGFILE} 2>&1
 	check_status
 
 	echo -n "\t${YC}-${NC} Installing WINEtricks"
-	${SUDO_X} ${APT_X} install winetricks -y >/dev/null 2>&1
+	${SUDO_X} ${APT_X} install winetricks -y >>${LOGFILE} 2>&1
 	check_status
 
 	if [ $? = 0 ]; then
 
-		echo " ${GC} = WINE installed successfully!${NC}"
+		echo "\n ${GC} = WINE installed successfully!${NC}"
 
 	else
 		
-		echo " ${RC} = WINE installation failed.${NC}"
+		echo "\n ${RC} = WINE installation failed.${NC}"
 		fail_exit
 
 	fi
@@ -192,7 +201,7 @@ fi
 # get WINEPREFIX
 echo "\n\n ${YC}*${NC} Preparing Sierra Chart Installation\n\n"
 
-echo -n " Enter full path for WINE bottle\n [${HOME}/Bottles/SierraChart]: "
+echo -n " Enter full path for WINE bottle [${HOME}/Bottles/SierraChart]:\n "
 read PREWINEFIX
 
 if [ "$PREWINEFIX" = "" ]; then
@@ -203,7 +212,7 @@ fi
 
 if [ -d "$PREWINEFIX" ] ; then
 
-	echo -n " ${RC}-${NC} Directory already exists. Is this ok? [y|N]: "
+	echo -n "\n ${RC}-${NC} Directory already exists. Is this ok? [y|N]: "
 	read R
 	case $R in
 
@@ -221,7 +230,7 @@ if [ -d "$PREWINEFIX" ] ; then
 
 else
 
-	echo -n " ${YC}*${NC} Creating directory (${PREWINEFIX})"
+	echo -n "\n ${YC}*${NC} Creating directory (${PREWINEFIX})"
 	mkdir -p $PREWINEFIX
 	check_status
 
@@ -229,7 +238,7 @@ fi
 
 		
 # validate username
-echo -n " Detected username ${GC}${USER}${NC}. Is this correct? [Y|n]: "
+echo -n " ${YC}-${NC} Detected username ${GC}${USER}${NC}. Is this correct? [Y|n]: "
 read R1
 
 case R1 in
@@ -260,7 +269,7 @@ read R2
 export WINEPREFIX=$PREWINEFIX
 
 echo -n "\t${YC}-${NC} Installing Visual C++ 2010 libraries"
-${WINETRICKS_X} -q vcrun2010 >/dev/null 2>&1
+${WINETRICKS_X} -q vcrun2010 >>${LOGFILE} 2>&1
 check_status
 
 # get latest Sierra Chart version number
@@ -270,16 +279,17 @@ echo "\t${GC}-${NC} Latest Sierra Chart Version: ${YC}${SCVER}${NC}"
 # download Sierra Chart ZIP file
 echo -n "\t${YC}-${NC} Downloading"
 UTD=`echo ${SCZIPURL} | sed "s/VERSION/${SCVER}/"`
-${WGET_X} -q ${UTD} -O /var/tmp/sc${SCVER}.zip >/dev/null 2>&1
+${WGET_X} -q ${UTD} -O /var/tmp/sc${SCVER}.zip >>${LOGFILE} 2>&1
 check_status
 
 # extract on WINEPREFIX
 echo -n "\t${YC}-${NC} Extracting"
-${UNZIP_X} -d ${PREWINEFIX}/drive_c/SierraChart/ /var/tmp/sc${SCVER}.zip >/dev/null 2>&1
+${UNZIP_X} -d ${PREWINEFIX}/drive_c/SierraChart/ /var/tmp/sc${SCVER}.zip >>${LOGFILE} 2>&1
 check_status
 
 # create desktop icons
-echo "[Desktop Entry]\nVersion=1.0\nType=Application\nTerminal=false\nExec="WINEPREFIX=\"${PREWINEFIX}\" ${WINE_X} start C:\\\\SierraChart\\\\SierraChart_64.exe"\nName=Sierra Chart\nComment=Sierra Chart\nIcon=/usr/share/icons/Adwaita/256x256/devices/computer.png" > ${HOME}/Desktop/SierraChart_64.desktop
+echo "[Desktop Entry]\nVersion=1.0\nType=Application\nTerminal=false\nExec=env WINEPREFIX=\"${PREWINEFIX}\" ${WINE_X} start C://SierraChart//SierraChart_64.exe\nName=Sierra Chart\nComment=Sierra Chart\nIcon=/usr/share/icons/Adwaita/256x256/devices/computer.png" > ${HOME}/Desktop/SierraChart_64.desktop
+/bin/chmod +x ${HOME}/Desktop/SierraChart_64.desktop
 
 echo "\n\t${GC} = Sierra Chart installed successfully!${NC}\n"
 
@@ -288,5 +298,5 @@ echo " For now this script created an icon on your desktop for starting"
 echo " Sierra Chart 64bit version."
 echo " \n\n You can also use the following command to start Sierra Chart"
 echo " from command line anytime you wish.\n\n"
-echo " ${GC}WINEPREFIX=\"${PREWINEFIX}\" ${WINE_X} start C:\\\SierraChart\\\SierraChart_64.exe${NC}\n\n"
+echo " ${GC}WINEPREFIX=\"${PREWINEFIX}\" ${WINE_X} start C://SierraChart//SierraChart_64.exe${NC}\n\n"
 echo " Happy Trading!\n"
