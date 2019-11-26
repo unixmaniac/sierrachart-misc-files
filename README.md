@@ -12,6 +12,7 @@ Download and run it as user like a normal shell script.
 It installs and configures WINE (staging, development or stable),
 creates a WINE bottle and "pours" latest Sierra Chart into it.
 
+Video demonstrating its usage https://youtu.be/K-mOrKnXjTg
 
 ## sc_build_dll.bash
 
