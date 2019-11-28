@@ -16,13 +16,13 @@ Video demonstrating its usage https://youtu.be/K-mOrKnXjTg
 
 ## sc_build_dll.bash
 
-Simple script that compiles a single ASCIL C++ source file into a DLL
+Simple script that compiles a single ACSIL C++ source file into a DLL
 and (re)loads it into Sierra Chart.
 
 Make sure to edit and change the following variables before running.
 
 ```
-SC_UDP0_PORT="XXXX"
+SC_UDP_PORT="XXXX"
 SC_DIR_NAME="SierraChart"
 SC_BASE_DIR="/home/foo/.wine/drive_c/${SC_DIR_NAME}"
 ```
