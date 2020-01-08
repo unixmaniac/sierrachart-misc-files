@@ -28,3 +28,5 @@ SC_BASE_DIR="/home/foo/.wine/drive_c/${SC_DIR_NAME}"
 ```
 
 Also tune the compilation options to fit your needs.
+
+Watch how to use this script along with setting up your Linux development environment for Sierra Chart https://youtu.be/UC69ex3kqcc
